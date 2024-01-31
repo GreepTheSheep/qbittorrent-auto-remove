@@ -19,38 +19,49 @@ let delayDays = process.env.TASK_DELAY_DAYS || 30,
 module.exports = async function() {
     let baseUrl = `http://${host}:${port}`,
         url = baseUrl+"/api/v2"
-        params = new URLSearchParams();
+        params = new URLSearchParams(),
+        res = null;
 
     params.set("username", user);
     params.set("password", pass);
     // Login
-    let res = await fetch(url+"/auth/login", {
-        method: "POST",
-        headers: {
-            "Referer": baseUrl,
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: params.toString()
-    });
+    try {
+        res = await fetch(url+"/auth/login", {
+            method: "POST",
+            headers: {
+                "Referer": baseUrl,
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: params.toString()
+        });
 
-    if (!res.ok) {
-        logger.fatal(`Couldn't connect to qBittorrent: ${res.status} ${res.statusText}`);
-        process.exit(20);
+        if (!res.ok) {
+            logger.fatal(`Couldn't connect to qBittorrent: ${res.status} ${res.statusText}`);
+            process.exit(20);
+        }
+    } catch (err) {
+        logger.fatal(`Couldn't connect to qBittorrent: ${err.code} ${err.message}`);
+        process.exit(21);
     }
 
     let sessionCookie = parseCookie(res);
 
     // List
-    res = await fetch(url+"/torrents/info?sort=ratio", {
-        headers: {
-            "Referer": baseUrl,
-            "Cookie": encodeURI(sessionCookie)
-        },
-    });
+    try {
+        res = await fetch(url+"/torrents/info?sort=ratio", {
+            headers: {
+                "Referer": baseUrl,
+                "Cookie": encodeURI(sessionCookie)
+            },
+        });
 
-    if (!res.ok) {
-        logger.fatal(`Failed to fetch torrent list: ${res.status} ${res.statusText}`);
-        process.exit(21);
+        if (!res.ok) {
+            logger.error(`Failed to fetch torrent list: ${res.status} ${res.statusText}`);
+            return;
+        }
+    } catch (err) {
+        logger.error(`Failed to fetch torrent list: ${err.code} ${err.message}`);
+        return;
     }
 
     let json = await res.json(),
@@ -81,16 +92,21 @@ module.exports = async function() {
         deleteQueryParams.set("hashes", torrentsToDelete.join("|"));
         deleteQueryParams.set("deleteFiles", String(userDeleteFiles));
 
-        res = await fetch(url+"/torrents/delete?"+deleteQueryParams.toString(), {
-            headers: {
-                "Referer": baseUrl,
-                "Cookie": encodeURI(sessionCookie)
-            },
-        });
+        try {
+            res = await fetch(url+"/torrents/delete?"+deleteQueryParams.toString(), {
+                headers: {
+                    "Referer": baseUrl,
+                    "Cookie": encodeURI(sessionCookie)
+                },
+            });
 
-        if (!res.ok) {
-            logger.fatal(`Failed to delete torrents: ${res.status} ${res.statusText}`);
-            process.exit(22);
+            if (!res.ok) {
+                logger.error(`Failed to delete torrents: ${res.status} ${res.statusText}`);
+                return;
+            }
+        } catch (err) {
+            logger.error(`Failed to delete torrents: ${err.code} ${err.message}`);
+            return;
         }
     }
 };
