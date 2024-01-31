@@ -71,26 +71,31 @@ function init() {
     params.set("username", user);
     params.set("password", pass);
     logger.info("connecting to " + url);
-    fetch(url, {
-        method: "POST",
-        headers: {
-            "Referer": `http://${host}:${port}`,
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: params.toString()
-    }).then(res=>{
-        if (!res.ok) {
-            logger.fatal(`Couldn't connect to qBittorrent: ${res.status} ${res.statusText}`);
-            process.exit(20);
-        } else {
-            logger.info(`qBittorrent: ${res.status} ${res.statusText}`);
-            // Schedule task
-            // require("./task")();
-            let fnTask = require("./task");
-            cron.schedule(cronTime, fnTask, {
-                timezone: envTimezone
-            });
-            logger.info("Scheduler started");
-        }
-    })
+    try {
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Referer": `http://${host}:${port}`,
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: params.toString()
+        }).then(res=>{
+            if (!res.ok) {
+                logger.fatal(`Couldn't connect to qBittorrent: ${res.status} ${res.statusText}`);
+                process.exit(20);
+            } else {
+                logger.info(`qBittorrent: ${res.status} ${res.statusText}`);
+                // Schedule task
+                // require("./task")();
+                let fnTask = require("./task");
+                cron.schedule(cronTime, fnTask, {
+                    timezone: envTimezone
+                });
+                logger.info("Scheduler started");
+            }
+        });
+    } catch (err) {
+        logger.fatal(`Couldn't connect to qBittorrent: ${err.code} ${err.message}`);
+        process.exit(21);
+    }
 }
