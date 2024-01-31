@@ -46,9 +46,7 @@ function init() {
     let host = process.env.QBIT_HOST,
         port = process.env.QBIT_PORT,
         user = process.env.QBIT_USER,
-        pass = process.env.QBIT_PASS,
-        url = `http://${host}:${port}/api/v2/auth/login`,
-        params = new URLSearchParams();
+        pass = process.env.QBIT_PASS;
 
     if (user == null) {
         logger.fatal("QBIT_USER variable is not set, exiting");
@@ -58,6 +56,17 @@ function init() {
         logger.fatal("QBIT_PASS variable is not set, exiting");
         process.exit(11);
     }
+    if (host == null) {
+        logger.fatal("QBIT_HOST variable is not set, exiting");
+        process.exit(12);
+    }
+    if (port == null) {
+        port = 8080;
+        logger.warn("QBIT_PORT variable is not set, using "+port+" as default port");
+    }
+
+    let url = `http://${host}:${port}/api/v2/auth/login`,
+    params = new URLSearchParams();
 
     params.set("username", user);
     params.set("password", pass);
