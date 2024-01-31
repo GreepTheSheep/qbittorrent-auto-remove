@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      TZ: Europe/Paris
+      WEBUI_PORT: 8685
+    ports:
+      - 8685:8685
+      - 6881:6881
+      - 6881:6881/udp
+    restart: always
+  auto-remove:
+    image: qbit-auto-remove
+    container_name: auto-remover
+    environment:
+      TZ: Europe/Paris
+      EXEC_CRON: "* * * * *"
+      QBIT_HOST: qbittorrent
+      QBIT_PORT: 8685
+      QBIT_USER: admin
+      QBIT_PASS: 123456
+      TASK_DELAY_DAYS: 30
+      TASK_RATIO: 0.2
+      TASK_DELETE_FILES: true
+    restart: always
+    depends_on:
+      - qbittorrent
