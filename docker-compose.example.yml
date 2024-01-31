@@ -23,7 +23,7 @@ services:
       QBIT_PORT: 8685
       QBIT_USER: admin
       QBIT_PASS: 123456
-      TASK_DELAY_DAYS: 30dock
+      TASK_DELAY_DAYS: 30
       TASK_RATIO: 0.2
       TASK_DELETE_FILES: true
     restart: always
