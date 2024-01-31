@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   qbittorrent:
-    image: linuxserver/qbittorrent:latest
+    image: linuxserver/qbittorrent
     container_name: qbittorrent
     environment:
       TZ: Europe/Paris
@@ -11,9 +11,11 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:8685 || exit 1"]
   auto-remove:
-    image: qbit-auto-remove
-    container_name: auto-remover
+    image: ghcr.io/greepthesheep/qbittorrent-auto-remove/qbittorrent-auto-remove
+    container_name: qbittorrent-auto-remover
     environment:
       TZ: Europe/Paris
       EXEC_CRON: "* * * * *"
@@ -21,9 +23,10 @@ services:
       QBIT_PORT: 8685
       QBIT_USER: admin
       QBIT_PASS: 123456
-      TASK_DELAY_DAYS: 30
+      TASK_DELAY_DAYS: 30dock
       TASK_RATIO: 0.2
       TASK_DELETE_FILES: true
     restart: always
     depends_on:
-      - qbittorrent
+      qbittorrent:
+        condition: service_healthy
