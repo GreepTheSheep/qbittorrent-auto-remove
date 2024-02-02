@@ -94,6 +94,7 @@ module.exports = async function() {
 
         try {
             res = await fetch(url+"/torrents/delete?"+deleteQueryParams.toString(), {
+                method: "POST",
                 headers: {
                     "Referer": baseUrl,
                     "Cookie": encodeURI(sessionCookie)
